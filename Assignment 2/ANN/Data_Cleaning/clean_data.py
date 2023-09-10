@@ -48,9 +48,15 @@ def interpolate_group(group):
     for col in group.columns:
         if group[col].isna().sum() == 0:
             continue
+
         x_values = np.arange(len(group[col]))
         # Filter NaN values and interpolate using cubic spline
         mask = group[col].isna()
+
+        if group[col].isna().sum() > len(group[col]) * 0.65:
+            group.loc[mask, col] = 0
+            continue
+
         x = x_values[~mask]
         y = group[col].dropna().values
         try:
@@ -59,6 +65,7 @@ def interpolate_group(group):
             # Interpolate missing values and replace them in the group
             group.loc[mask, col] = cs(x_values[mask])
         except Exception as e:
+            group.loc[mask, col] = 0
             print("pain")
 
     return group
