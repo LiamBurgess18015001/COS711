@@ -1,17 +1,11 @@
+# its been 5 years lol
 import numpy as np
 import pandas as pd
 import scipy as sp
 from pyampute.exploration.mcar_statistical_tests import MCARTest
 from sklearn.impute import KNNImputer
 
-columns = ['Entity', 'Year', 'Access to electricity (% of population)', 'Access to clean fuels for cooking',
-           'Renewable-electricity-generating-capacity-per-capita', 'Financial flows to developing countries (US $)',
-           'Renewable energy share in the total final energy consumption (%)', 'Electricity from fossil fuels (TWh)',
-           'Electricity from nuclear (TWh)', 'Electricity from renewables (TWh)',
-           'Low-carbon electricity (% electricity)', 'Primary energy consumption per capita (kWh/person)',
-           'Energy intensity level of primary energy (MJ/$2017 PPP GDP)', 'Value_co2_emissions_kt_by_country',
-           'Renewables (% equivalent primary energy)', 'gdp_growth', 'gdp_per_capita', 'Density\\n(P/Km2)',
-           'Land Area(Km2)', 'Latitude', 'Longitude']
+from global_vars import columns
 
 
 def convert_to_float(value):
@@ -20,11 +14,9 @@ def convert_to_float(value):
     return value
 
 
-data = pd.read_csv('./co2_emissions/emission_data.csv')
+data = pd.read_csv('Data_Cleaning/co2_emissions/emission_data.csv')
 
-nan_counts = data.isna().sum() * 100 / len(data)
-
-data_no_countries = pd.read_table('./co2_emissions/emission_data_modified.csv', sep=',')
+data_no_countries = pd.read_table('Data_Cleaning/co2_emissions/emission_data_modified.csv', sep=',')
 mt = MCARTest(method="little")
 if mt.little_mcar_test(data_no_countries) > 0.05:
     print('Is MCAR')
@@ -62,8 +54,17 @@ def interpolate_group(group):
         try:
             cs = sp.interpolate.CubicSpline(x, y, bc_type='not-a-knot', extrapolate=True)
 
+            max = y.max() * 1.5
+            min = y.min() * 0.5
+
             # Interpolate missing values and replace them in the group
             group.loc[mask, col] = cs(x_values[mask])
+            for i, val in enumerate(group[col]):
+                if val > max:
+                    group[col][i] = max
+                elif val < min:
+                    group[col][i] = min
+
         except Exception as e:
             group.loc[mask, col] = 0
             print("pain")
@@ -73,4 +74,8 @@ def interpolate_group(group):
 
 data = data.groupby("Entity").apply(interpolate_group).reset_index(drop=True)
 df = pd.DataFrame(data)
-print(1)
+nan_counts = data.isna().sum() * 100 / len(data)
+
+data.to_csv("pre_processing/files/cleaned_data.csv")
+
+#################################################
