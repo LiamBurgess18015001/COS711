@@ -1,3 +1,6 @@
+import math
+import random
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -38,15 +41,26 @@ def drop_columns(data: pd.DataFrame):
     return data.drop(columns=['Latitude', 'Longitude', 'Value_co2_emissions_kt_by_country', 'Entity', 'Year'])
 
 
-def make_labels(rows):
+def make_labels(rows, filename="./Build/files/test_labels.csv"):
     labels = rows['Value_co2_emissions_kt_by_country'].values.astype(np.float64)
     ins = []
     for i, lab in enumerate(labels):
         ins.append([i, lab])
-    pd.DataFrame(ins).to_csv("./Build/files/labels.csv", encoding="utf-8", index=False, header=False)
+    pd.DataFrame(ins).to_csv(f"{filename}", encoding="utf-8", index=False, header=False)
+
+
+def train_test_split(data):
+    random_indices = random.sample(range(0, len(data)), math.ceil(len(data)/4))
+    test = data.iloc[random_indices]
+    train = data.drop(random_indices)
+    return train, test
 
 
 data[columns[2:-2]] = data[columns[2:-2]].apply(z_score_non_zero)
-make_labels(data)
-data = drop_columns(data)
-data.to_csv("Build/files/preprocessed_data.csv", index=False)
+train, test = train_test_split(data)
+make_labels(test, "./Build/files/test_labels.csv")
+make_labels(train, "./Build/files/train_labels.csv")
+train = drop_columns(train)
+test = drop_columns(test)
+train.to_csv("Build/files/train_data.csv", index=False)
+test.to_csv("Build/files/test_data.csv", index=False)
