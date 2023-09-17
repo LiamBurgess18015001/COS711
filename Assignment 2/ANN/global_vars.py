@@ -6,3 +6,5 @@ columns = ['Entity', 'Year', 'Access to electricity (% of population)', 'Access 
            'Energy intensity level of primary energy (MJ/$2017 PPP GDP)', 'Value_co2_emissions_kt_by_country',
            'Renewables (% equivalent primary energy)', 'gdp_growth', 'gdp_per_capita', 'Density\\n(P/Km2)',
            'Land Area(Km2)', 'Latitude', 'Longitude']
+
+print(len(columns))

@@ -38,6 +38,9 @@ for axi_a in axis_a:
 
 def interpolate_group(group):
     for col in group.columns:
+        if col == "Value_co2_emissions_kt_by_country":
+            continue
+
         if group[col].isna().sum() == 0:
             continue
 
@@ -73,9 +76,9 @@ def interpolate_group(group):
 
 
 data = data.groupby("Entity").apply(interpolate_group).reset_index(drop=True)
-df = pd.DataFrame(data)
+data = data[~data['Value_co2_emissions_kt_by_country'].isna()]
 nan_counts = data.isna().sum() * 100 / len(data)
-
-data.to_csv("pre_processing/files/cleaned_data.csv")
+print(nan_counts)
+data.to_csv("pre_processing/files/cleaned_data.csv", index=False)
 
 #################################################
