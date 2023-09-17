@@ -2,11 +2,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
-import csv
 
 from global_vars import columns
 
-data = pd.read_csv('Data_Cleaning/co2_emissions/emission_data.csv')
+data = pd.read_csv('./pre_processing/files/cleaned_data.csv')
 
 
 def minMax_scaling(grp, debug=True):
@@ -36,25 +35,18 @@ def z_score_non_zero(grp, debug=False):
 
 
 def drop_columns(data: pd.DataFrame):
-    return data.drop(columns=['Latitude', 'Longitude'])
+    return data.drop(columns=['Latitude', 'Longitude', 'Value_co2_emissions_kt_by_country', 'Entity', 'Year'])
 
 
-def make_labels(grps):
-    labels = []
-    label_names = []
-    for i, grp in enumerate(grps):
-        labels.append([grp[0], i])
-        for year in grp[1]['Year']:
-            label_names.append([f'{grp[0]}_{year}', i])
-
-    with open("Build/files/labels.csv", "w+", encoding="utf-8", newline="") as file:
-        csv.writer(file).writerows(labels)
-
-    with open("Build/files/label_names.csv", "w+", encoding="utf-8", newline="") as file:
-        csv.writer(file).writerows(label_names)
+def make_labels(rows):
+    labels = rows['Value_co2_emissions_kt_by_country'].values.astype(np.float64)
+    ins = []
+    for i, lab in enumerate(labels):
+        ins.append([i, lab])
+    pd.DataFrame(ins).to_csv("./Build/files/labels.csv", encoding="utf-8", index=False, header=False)
 
 
 data[columns[2:-2]] = data[columns[2:-2]].apply(z_score_non_zero)
+make_labels(data)
 data = drop_columns(data)
-make_labels(data.groupby("Entity"))
-data.to_csv("Build/files/preprocessed_data.csv")
+data.to_csv("Build/files/preprocessed_data.csv", index=False)
