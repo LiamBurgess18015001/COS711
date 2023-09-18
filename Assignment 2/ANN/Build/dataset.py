@@ -5,9 +5,9 @@ from torch.utils.data import Dataset
 
 
 class CosDataset(Dataset):
-    def __init__(self, transform=None, target_transform=None):
-        self.data_set = pd.read_csv("./Build/files/preprocessed_data.csv", encoding="utf-8")
-        self.data_labels = pd.read_csv("./Build/files/labels.csv", encoding="utf-8", header=None)
+    def __init__(self, datafile: str, label_file: str, transform=None, target_transform=None):
+        self.data_set = pd.read_csv(datafile, encoding="utf-8")
+        self.data_labels = pd.read_csv(label_file, encoding="utf-8", header=None)
         self.transform = transform
         self.target_transform = target_transform
 
@@ -26,4 +26,4 @@ class CosDataset(Dataset):
     def fetch_row(self, row_index: int):
         row = self.data_set.iloc[row_index]
         row = pd.DataFrame(row).transpose()
-        return torch.tensor(row.values.astype(np.float64))
+        return torch.tensor(row.values.astype('float32'))
