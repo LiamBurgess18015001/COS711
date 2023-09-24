@@ -57,6 +57,7 @@ def train_test_split(data):
 
 
 data[columns[2:-2]] = data[columns[2:-2]].apply(z_score_non_zero)
+
 train, test = train_test_split(data)
 make_labels(test, "./Build/files/test_labels.csv")
 make_labels(train, "./Build/files/train_labels.csv")

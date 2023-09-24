@@ -3,7 +3,9 @@ import sys
 from torch.utils.data import DataLoader
 
 from Build.dataset import CosDataset
-from Build.build import NeuralNetwork, train_loop, test_loop
+from Build.build import NeuralNetwork, train_loop
+
+import matplotlib.pyplot as plt
 
 sys.setrecursionlimit(1000000)
 
@@ -41,3 +43,13 @@ train_loop(train_dataloader, test_dataloader, model, loss_fn, optimizer, epochs)
 # test_loop(test_dataloader, model, loss_fn)
 
 print("Done!")
+
+for batch_num, (inp, out) in enumerate(test_dataloader):
+    inp = inp.float()
+    out.float()
+    break
+
+predict = model(inp).detach().numpy()
+plt.plot(inp[0], out[0], "ro")
+plt.plot(inp[0], predict[0], "b")
+plt.show()
