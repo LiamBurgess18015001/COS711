@@ -42,7 +42,7 @@ def drop_columns(data: pd.DataFrame):
 
 
 def make_labels(rows, filename="./Build/files/test_labels.csv"):
-    labels = rows['Value_co2_emissions_kt_by_country'].values.astype(np.float64)
+    labels = rows['Value_co2_emissions_kt_by_country'].values.astype(np.float64) / 1000000
     ins = []
     for i, lab in enumerate(labels):
         ins.append([i, lab])
@@ -56,12 +56,13 @@ def train_test_split(data):
     return train, test
 
 
-data[columns[2:-2]] = data[columns[2:-2]].apply(z_score_non_zero)
+data[columns[2:13]] = data[columns[2:13]].apply(z_score_non_zero)
+data[columns[15:-2]] = data[columns[15:-2]].apply(z_score_non_zero)
 
 train, test = train_test_split(data)
-make_labels(test, "./Build/files/test_labels.csv")
-make_labels(train, "./Build/files/train_labels.csv")
+make_labels(test, "./Build_Model/files/test_labels.csv")
+make_labels(train, "./Build_Model/files/train_labels.csv")
 train = drop_columns(train)
 test = drop_columns(test)
-train.to_csv("Build/files/train_data.csv", index=False)
-test.to_csv("Build/files/test_data.csv", index=False)
+train.to_csv("Build_Model/files/train_data.csv", index=False)
+test.to_csv("Build_Model/files/test_data.csv", index=False)
