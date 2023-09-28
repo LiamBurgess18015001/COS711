@@ -66,9 +66,18 @@ knn_imputer = KNNImputer(n_neighbors=1)
 imputed_data = knn_imputer.fit_transform(data_no_countries)
 pd.DataFrame(imputed_data, columns=columns[2:])
 
+empty_labels = data[data['Value_co2_emissions_kt_by_country'].isna()]
+groups_with_all_nans = empty_labels.groupby("Entity").apply(lambda grp: grp.isna().all())
+axis_a, axis_b = groups_with_all_nans.axes
+for axi_a in axis_a:
+    for axi_b in axis_b[1:]:
+        if groups_with_all_nans.loc[axi_a, axi_b]:
+            empty_labels.loc[data["Entity"] == axi_a, axi_b] = 0
+empty_labels = empty_labels.groupby("Entity").apply(interpolate_group).reset_index(drop=True)
+empty_labels.to_csv("pre_processing/files/empty_labels.csv", index=False)
+
 data = data[~data['Value_co2_emissions_kt_by_country'].isna()]
 groups_with_all_nans = data.groupby("Entity").apply(lambda grp: grp.isna().all())
-pd.DataFrame(groups_with_all_nans)
 axis_a, axis_b = groups_with_all_nans.axes
 for axi_a in axis_a:
     for axi_b in axis_b[1:]:
@@ -76,8 +85,8 @@ for axi_a in axis_a:
             data.loc[data["Entity"] == axi_a, axi_b] = 0
 
 data = data.groupby("Entity").apply(interpolate_group).reset_index(drop=True)
-nan_counts = data.isna().sum() * 100 / len(data)
-print(nan_counts)
 data.to_csv("pre_processing/files/cleaned_data.csv", index=False)
 
+nan_counts = data.isna().sum() * 100 / len(data)
+print(nan_counts)
 #################################################
