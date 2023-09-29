@@ -15,7 +15,7 @@ class CosDataset(Dataset):
 
     def __getitem__(self, idx):
         row = torch.tensor(self.data_set.iloc[idx].transpose(), dtype=torch.float64)
-        label = torch.tensor([self.data_labels.iloc[idx][1]], dtype=torch.float64)
+        label = torch.tensor(self.data_labels.iloc[idx], dtype=torch.float64)
         if self.transform:
             row = self.transform(row)
         if self.target_transform:

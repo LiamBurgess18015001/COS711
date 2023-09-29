@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader
 
 from Build_Model.Neural_Network import NeuralNetwork
 from Build_Model.dataset import CosDataset
-from Run.Train_Test import train_test
+from Run.Train_Test import train_test, do_test
 
 sys.setrecursionlimit(1000000)
 torch.set_default_tensor_type(torch.DoubleTensor)
@@ -30,13 +30,14 @@ test_data = CosDataset("./Build_Model/files/test_data.csv", "./Build_Model/files
 model = NeuralNetwork()
 # model.load_state_dict(torch.load("./Run/files/SGD_L1"))
 
-loss_fn = torch.nn.L1Loss()
+loss_fn = torch.nn.MSELoss()
 learning_rate = 0.0001
 momentum = 0.78
-batch_size = 180
-batch_passes = 1
+batch_size = 256
+batch_passes = 100
 fix = True
-epochs = 750
+epochs = 1
+training_target = 70
 
 train_dataloader = DataLoader(training_data, batch_size, shuffle=True)
 test_dataloader = DataLoader(test_data, batch_size)
@@ -44,8 +45,11 @@ test_dataloader = DataLoader(test_data, batch_size)
 # optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
 
-train_test("Random_Tests", train_dataloader, test_dataloader, model, loss_fn, optimizer, epochs, batch_passes, fix)
+for i in range(10):
+    training_target += 1
+    train_test("L1_SGD", train_dataloader, test_dataloader, model, loss_fn, optimizer, epochs, batch_passes,
+               fix, training_target)
+
+# do_test(model, test_dataloader, loss_fn)
 
 print("Done!")
-
-# torch.save(model.state_dict(), "./Run/files/SGD_L1")

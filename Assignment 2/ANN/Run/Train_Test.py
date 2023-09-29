@@ -1,14 +1,13 @@
 import random
-import matplotlib.pyplot as plt
+
 import torch
 
 file = open("./Run/files/run_info.txt", 'a+', encoding="utf-8")
 
 
 def train_test(model_name: str, train_loader, test_loader, model: torch.nn, loss_fn, optimizer: torch.optim.Optimizer,
-               epochs: int, batch_runs=1, fix=True):
+               epochs: int, batch_runs=1, fix=True, training_target=64):
     file.write(f"{model_name}\n")
-    loss_eval = []
     model.train()
     for epoch in range(epochs):
         # Print epoch
@@ -44,13 +43,15 @@ def train_test(model_name: str, train_loader, test_loader, model: torch.nn, loss
 
                 # Record learning
                 # run_loss.append(loss.item())
-            train_avg += ((abs(pred - y) <= 0.002).sum().item())
+            train_avg += ((abs(pred - y) <= 0.02).sum().item())
 
             # loss_eval.append(loss.item())
 
-            current_loss += train_error.item()
-        train_avg = train_avg * 100 / len(train_loader.dataset)
-        print(f"Train Average: {train_avg}")
+            print(f'Train Loss: {current_loss / len(train_loader):.5f}')
+
+            current_loss = train_error.item()
+            train_avg = train_avg * 100 / len(train_loader.dataset)
+            print(f"Train Average: {train_avg}")
 
         with torch.no_grad():
             val_epoch_loss = 0
@@ -64,11 +65,32 @@ def train_test(model_name: str, train_loader, test_loader, model: torch.nn, loss
                     f'Epoch {epoch + 0:03}: | Train Loss: {current_loss / len(train_loader):.5f} | Test Loss: {val_epoch_loss / len(test_loader):.5f}')
             avg = avg * 100 / len(test_loader.dataset)
             print(f"Test Average: {avg}")
+
             # fig, ax = plt.subplots()
             # ax.plot(y, 'ro', label='ref')
             # ax.plot(pred, 'bo', label='pred')
             # plt.show()
 
-
             file.write(f'epoch: {epoch}\nTrain Acccuracy: {train_avg}\nTest Accuracy: {avg}\n')
+
+            if avg >= training_target:
+                print("Training Target Hit")
+                torch.save(model.state_dict(), "./Run/files/SGD_L1_Train")
+                # torch.save(model.state_dict(), "./Run/files/SGD_L1_optim")
+                file.write(f'epoch: {epoch}\nTrain Acccuracy: {train_avg}\nTest Accuracy: {avg}\n')
+                break
     file.write("###############################################################\n")
+    return avg
+
+
+def do_test(model, test_loader, loss_fn):
+    with torch.no_grad():
+        val_epoch_loss = 0
+        model.eval()
+        avg = 0.00
+        for X, y in test_loader:
+            pred = model(X)
+            val_epoch_loss += loss_fn(pred, y).item()
+            avg += ((abs(pred - y) <= 0.02).sum().item())
+        avg = avg * 100 / len(test_loader.dataset)
+        print(f"Test Average: {avg}")
