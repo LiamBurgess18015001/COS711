@@ -8,6 +8,9 @@ from sklearn.preprocessing import MinMaxScaler
 
 from global_vars import columns
 
+figs, ax = plt.subplots(4, 4, figsize=(12, 4))
+ax = ax.flatten()
+axs_count = 0
 
 def min_max_scaling(grp, debug=False):
     scaler = MinMaxScaler()
@@ -21,27 +24,28 @@ def min_max_scaling(grp, debug=False):
     return normalized_data
 
 
-def z_score_non_zero(grp, debug=False):
-    non_zeros = grp  # [grp != 0]
+def z_score_non_zero(grp, debug=True):
+    global ax
+    global axs_count
+    non_zeros = grp[grp != 0]
     mean = non_zeros.mean()
     std_dev = non_zeros.std()
     threshold = 3
     z_scores = (grp - mean) / std_dev
-    z_scores = z_scores.mask((abs(z_scores) > threshold), 0)
+    # z_scores = z_scores.mask((abs(z_scores) > threshold), 0)
     if debug:
-        plt.hist(z_scores, bins=np.arange(-4, 4, 0.1), edgecolor="black")
-        plt.show()
-        if abs(z_scores.mean()) * 100 > 20:
-            print("Adjust Z")
-        print()
+        ax[axs_count].hist(z_scores, bins=np.arange(-4, 4, 0.1), edgecolor="black")
+        ax[axs_count].set_title(columns[axs_count+2])
+        print(z_scores.mean())
         print(z_scores.std())
+        axs_count += 1
     return z_scores
 
 
 def drop_columns(data: pd.DataFrame):
-    # return data.drop(columns=['Latitude', 'Longitude', 'Value_co2_emissions_kt_by_country', 'Entity', 'Year'])
-    return data.drop(columns=['Latitude', 'Longitude', 'Value_co2_emissions_kt_by_country', 'Entity', 'Year',
-                              'Electricity from nuclear (TWh)', 'Renewables (% equivalent primary energy)'])
+    return data.drop(columns=['Latitude', 'Longitude', 'Value_co2_emissions_kt_by_country', 'Entity', 'Year'])
+    # return data.drop(columns=['Latitude', 'Longitude', 'Value_co2_emissions_kt_by_country', 'Entity', 'Year',
+    #                           'Electricity from nuclear (TWh)', 'Renewables (% equivalent primary energy)'])
 
 
 def make_labels(rows, filename="./Build/files/test_labels.csv"):
@@ -61,32 +65,7 @@ def train_test_validate_split(data):
     return train, test, validate
 
 
-def replace_outliers(grp, iqr_factor=1.5):
-    q1 = grp.quantile(0.25)
-    q3 = grp.quantile(0.75)
-    iqr = q3 - q1
-    lower_bound = q1 - iqr_factor * iqr
-    upper_bound = q3 + iqr_factor * iqr
-
-    _min = grp.min()
-    _max = grp.max()
-
-    # Replace outliers with the specified replacement value
-    for i, x in enumerate(grp):
-        if x < lower_bound:
-            grp[i] = _min
-
-        if x > upper_bound:
-            grp[i] = _max
-
-    return grp
-
-
 data = pd.read_csv('./pre_processing/files/cleaned_data.csv')
-
-# Remove Outliers
-data[columns[2:13]] = data[columns[2:13]].apply(replace_outliers)
-data[columns[14:-2]] = data[columns[14:-2]].apply(replace_outliers)
 
 # Scale
 # data[columns[2:13]] = data[columns[2:13]].apply(min_max_scaling)
@@ -95,6 +74,9 @@ data[columns[14:-2]] = data[columns[14:-2]].apply(replace_outliers)
 # Normalize
 data[columns[2:13]] = data[columns[2:13]].apply(z_score_non_zero)
 data[columns[14:-2]] = data[columns[14:-2]].apply(z_score_non_zero)
+
+plt.tight_layout()
+plt.show()
 
 # Split and Label
 train, test, validate = train_test_validate_split(data)
