@@ -28,7 +28,7 @@ def build_model(model_type: str, activation, size):
                 _activation(),
                 nn.Linear(16, 1),
                 nn.Identity()
-            )
+            ).to("cuda")
         else:
             return nn.Sequential(
                 nn.Linear(16, 512),
@@ -154,13 +154,5 @@ class NeuralNetwork(nn.Module):
         # self.flatten = nn.Flatten()
         self.linear_relu_stack = model
 
-    # def __init__(self):
-    #     super().__init__()
-    #     self.linear_relu_stack = nn.Sequential(
-    #         nn.Linear(15, 1),
-    #         nn.Identity(),
-    #         nn.Linear(1, 1)
-    #     )
-    #
     def forward(self, x):
         return self.linear_relu_stack(x)

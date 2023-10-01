@@ -18,29 +18,31 @@ def train_test(model_name: str,
                threshold=0.02,
                learning_decay=0,
                momentum_decay=0) -> (float, float):
-    train_maximum = 65
+    train_max = 65
     test_max = 65
+    train_error = 0
+    generalization_error = 0
     file.write(f"{model_name}\n")
     model.train()
     for epoch in range(epochs):
         # Print epoch
         print(f'Starting epoch {epoch + 1}')
 
-        if epoch % 20 == 0:
-            print(
-                f"Learning Rate Old: {optimizer.param_groups[0]['lr']}\nNew: {optimizer.param_groups[0]['lr'] - learning_decay}")
-            optimizer.param_groups[0]['lr'] = optimizer.param_groups[0]['lr'] - learning_decay
-
-            print(
-                f"Momentum Old: {optimizer.param_groups[0]['momentum']}\nNew: {optimizer.param_groups[0]['momentum'] - momentum_decay}")
-            optimizer.param_groups[0]['momentum'] = optimizer.param_groups[0]['momentum'] - momentum_decay
+        # if epoch % 20 == 0:
+        #     print(
+        #         f"Learning Rate Old: {optimizer.param_groups[0]['lr']}\nNew: {optimizer.param_groups[0]['lr'] - learning_decay}")
+        #     optimizer.param_groups[0]['lr'] = optimizer.param_groups[0]['lr'] - learning_decay
+        #
+        #     print(
+        #         f"Momentum Old: {optimizer.param_groups[0]['momentum']}\nNew: {optimizer.param_groups[0]['momentum'] - momentum_decay}")
+        #     optimizer.param_groups[0]['momentum'] = optimizer.param_groups[0]['momentum'] - momentum_decay
 
         # Set current loss value
         current_loss = 0.0
         train_avg = 0.00
         for batch, (X, y) in enumerate(train_loader):
-            # X = X.float()
-            # y = y.float()
+            X = X.to("cuda")
+            y = y.to("cuda")
             # run_loss = []
 
             if not fix:
@@ -64,18 +66,13 @@ def train_test(model_name: str,
                 optimizer.zero_grad()
 
                 # Record learning
-                # run_loss.append(loss.item())
             train_avg += ((abs(pred - y) <= threshold).sum().item())
-
-            # loss_eval.append(loss.item())
-
-            # print(f'Train Loss: {current_loss / len(train_loader):.5f}')
 
             current_loss += train_error.item()
         train_avg = train_avg * 100 / len(train_loader.dataset)
 
-        if train_avg > train_maximum:
-            train_maximum = train_avg
+        if train_avg > train_max:
+            train_max = train_avg
 
         print(f"Train Average: {train_avg}")
 
@@ -84,6 +81,8 @@ def train_test(model_name: str,
             model.eval()
             avg = 0.00
             for X, y in test_loader:
+                X = X.to("cuda")
+                y = y.to("cuda")
                 pred = model(X)
                 val_epoch_loss += loss_fn(pred, y).item()
                 avg += ((abs(pred - y) <= threshold).sum().item())
@@ -95,16 +94,17 @@ def train_test(model_name: str,
             if avg > test_max:
                 test_max = avg
 
-            file.write(f'epoch: {epoch}\nTrain Acccuracy: {train_avg}\nTest Accuracy: {avg}\n')
+            train_error += current_loss / len(train_loader)
+            generalization_error += val_epoch_loss / len(test_loader)
 
             if avg >= training_target:
                 print("Training Target Hit")
                 torch.save(model.state_dict(), f"./Run/files/{model_name}")
                 # torch.save(model.state_dict(), "./Run/files/SGD_L1_optim")
                 file.write(f'epoch: {epoch}\nTrain Acccuracy: {train_avg}\nTest Accuracy: {avg}\n')
-                break
-    file.write("###############################################################\n")
-    return train_maximum, test_max
+                return train_max, test_max, train_error / epoch+1, generalization_error / epoch+1
+
+    return train_max, test_max, train_error / epochs, generalization_error / epochs
 
 
 def do_test(model, test_loader, loss_fn):

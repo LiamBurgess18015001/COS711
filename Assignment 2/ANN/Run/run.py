@@ -32,28 +32,32 @@ momentum = 0.99
 batch_size = 128
 batch_passes = 1
 fix = True
-epochs = 250
+epochs = 150
 training_target = 63
-
-model = NeuralNetwork(build_model("pyramid", "sigmoid", "large")).to(device)
-print(model)
-model_name = "L1_SGD_Pyramid_Large_Sigmoid"
 
 train_dataloader = DataLoader(training_data, batch_size)
 test_dataloader = DataLoader(test_data, batch_size)
 
 # optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
-optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum, weight_decay=0.001)
 
 total_train_avg = 0
 total_test_avg = 0
+total_train_error = 0
+total_gen_error = 0
+
+file = open("./Run/files/config_res.txt", "a+", encoding="utf-8")
+
+model_name = "L1_SGD_Pyramid_Large_Sigmoid"
+file.write(f"{model_name}\n")
 
 for i in range(1, 11):
-    # batch_size = int(batch_size / i)
+    model = NeuralNetwork(build_model("pyramid", "sigmoid", "large")).to(device)
+    print(model)
 
-    # learning_rate = 0.9
+    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum, weight_decay=0.001)
+
     training_target += 1
-    train_avg, test_avg = train_test(model_name,
+    train_avg, test_avg, train_error, gen_error = train_test(model_name,
                                      train_dataloader,
                                      test_dataloader,
                                      model,
@@ -65,12 +69,19 @@ for i in range(1, 11):
                                      training_target,
                                      )
 
+    total_gen_error += gen_error
+    total_train_error += train_error
+    total_train_avg += train_avg
+    total_test_avg += test_avg
+
+    file.write(f'Run: {i}, Train_Avg: {train_avg}, Test: {test_avg}, train_error: {train_error}, gen_error: {gen_error}\n')
+
 print(f'Final Training Average: {total_train_avg / 10}')
 print(f'Final Testing Average: {total_test_avg / 10}')
 
-with open("./Run/files/config_res.txt", "a+", encoding="utf-8") as file:
-    file.write(f"{model_name}")
-    file.write(f'Final Training Average: {total_train_avg / 10}')
-    file.write(f'Final Testing Average: {total_test_avg / 10}')
+file.write(f'Final Training Average: {total_train_avg / 10}\n')
+file.write(f'Final Testing Average: {total_test_avg / 10}\n')
+file.write(f'Final Train Error: {total_train_error / 10}\n')
+file.write(f'Final Gen Error: {total_gen_error / 10}\n')
 
 print("Done!")
