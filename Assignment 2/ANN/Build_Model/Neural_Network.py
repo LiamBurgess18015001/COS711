@@ -28,7 +28,7 @@ def build_model(model_type: str, activation, size):
                 _activation(),
                 nn.Linear(16, 1),
                 nn.Identity()
-            ).to("cuda")
+            )
         else:
             return nn.Sequential(
                 nn.Linear(16, 512),
