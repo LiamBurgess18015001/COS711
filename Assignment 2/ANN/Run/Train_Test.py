@@ -18,8 +18,8 @@ def train_test(model_name: str,
                threshold=0.02,
                learning_decay=0,
                momentum_decay=0) -> (float, float):
-    train_max = 65
-    test_max = 65
+    train_max = 0
+    test_max = 0
     train_error = 0
     generalization_error = 0
     file.write(f"{model_name}\n")
@@ -102,7 +102,7 @@ def train_test(model_name: str,
                 torch.save(model.state_dict(), f"./Run/files/{model_name}")
                 # torch.save(model.state_dict(), "./Run/files/SGD_L1_optim")
                 file.write(f'epoch: {epoch}\nTrain Acccuracy: {train_avg}\nTest Accuracy: {avg}\n')
-                return train_max, test_max, train_error / epoch+1, generalization_error / epoch+1
+                return train_max, test_max, train_error / (epoch+1), generalization_error / (epoch+1)
 
     return train_max, test_max, train_error / epochs, generalization_error / epochs
 
