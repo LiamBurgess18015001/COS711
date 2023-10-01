@@ -1,4 +1,0 @@
-L1_SGD_Pyramid_Large_Sigmoid
-Run: 1, Train_Avg: 65, Test: 66.14906832298136, train_error: 0.10469645429451116, gen_error: 0.2537319425174779
-Run: 2, Train_Avg: 65, Test: 66.45962732919254, train_error: 0.0520566723801224, gen_error: 0.1452455042677228
-L1_SGD_Pyramid_Large_Sigmoid

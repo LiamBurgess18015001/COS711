@@ -24,6 +24,7 @@ print(f"Using {device} device")
 training_data = CosDataset("./Build_Model/files/train_data.csv", "./Build_Model/files/train_labels.csv")
 test_data = CosDataset("./Build_Model/files/test_data.csv", "./Build_Model/files/test_labels.csv")
 
+# loss_fn = torch.nn.MSELoss()
 loss_fn = torch.nn.L1Loss()
 learning_rate = 0.001
 momentum = 0.99
@@ -45,36 +46,37 @@ total_test_avg = 0
 total_train_error = 0
 total_gen_error = 0
 
-file = open("./Run/files/config_res.txt", "a+", encoding="utf-8")
+file = open("./Run/files/config_res_laptop.txt", "a+", encoding="utf-8")
 
-model_name = "L1_SGD_Pyramid_Large_Sigmoid"
+model_name = "L1_SGD_Flat_1024_small_sigmoid"
 file.write(f"{model_name}\n")
 
 for i in range(1, 11):
-    model = NeuralNetwork(build_model("pyramid", "sigmoid", "large")).to(device)
+    model = NeuralNetwork(build_model("flat-1024", "sigmoid", "small")).to(device)
     print(model)
 
     optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum, weight_decay=0.001)
 
     training_target += 1
     train_avg, test_avg, train_error, gen_error = train_test(model_name,
-                                     train_dataloader,
-                                     test_dataloader,
-                                     model,
-                                     loss_fn,
-                                     optimizer,
-                                     epochs,
-                                     batch_passes,
-                                     fix,
-                                     training_target,
-                                     )
+                                                             train_dataloader,
+                                                             test_dataloader,
+                                                             model,
+                                                             loss_fn,
+                                                             optimizer,
+                                                             epochs,
+                                                             batch_passes,
+                                                             fix,
+                                                             training_target,
+                                                             )
 
     total_gen_error += gen_error
     total_train_error += train_error
     total_train_avg += train_avg
     total_test_avg += test_avg
 
-    file.write(f'Run: {i}, Train_Avg: {train_avg}, Test: {test_avg}, train_error: {train_error}, gen_error: {gen_error}\n')
+    file.write(
+        f'Run: {i}, Train_Avg: {train_avg}, Test: {test_avg}, train_error: {train_error}, gen_error: {gen_error}\n')
 
 print(f'Final Training Average: {total_train_avg / 10}')
 print(f'Final Testing Average: {total_test_avg / 10}')
